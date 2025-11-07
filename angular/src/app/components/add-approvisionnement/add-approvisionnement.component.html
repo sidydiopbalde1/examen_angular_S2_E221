@@ -1,0 +1,215 @@
+<div class="approvisionnement-container">
+  <div class="header">
+    <h1>Nouvel approvisionnement</h1>
+    <button class="btn-retour" (click)="retourListe()">
+      ← Retour à la liste
+    </button>
+  </div>
+
+  <div class="form-wrapper">
+    <!-- Section Informations générales -->
+    <div class="section">
+      <h2 class="section-title">Informations générales</h2>
+      
+      <form [formGroup]="approvisionnementForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="dateApprovisionnement">
+              Date d'approvisionnement
+            </label>
+            <input 
+              type="date" 
+              id="dateApprovisionnement"
+              formControlName="dateApprovisionnement"
+              class="form-control"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="fournisseur">Fournisseur</label>
+            <select 
+              id="fournisseur"
+              formControlName="fournisseur"
+              class="form-control"
+            >
+              <option [ngValue]="null" disabled>
+                Sélectionner un fournisseur
+              </option>
+              <option 
+                *ngFor="let fournisseur of fournisseurs" 
+                [ngValue]="fournisseur"
+              >
+                {{ fournisseur.nom }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="reference">Référence</label>
+            <input 
+              type="text" 
+              id="reference"
+              formControlName="reference"
+              class="form-control"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="referenceApprovisionnement">
+              Référence de l'approvisionnement
+            </label>
+            <input 
+              type="text" 
+              id="referenceApprovisionnement"
+              formControlName="referenceApprovisionnement"
+              class="form-control"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="observations">Observations</label>
+          <textarea 
+            id="observations"
+            formControlName="observations"
+            class="form-control"
+            rows="3"
+            placeholder="Observations ou commentaires sur cet approvisionnement"
+          ></textarea>
+        </div>
+      </form>
+    </div>
+
+    <!-- Section Détails de l'approvisionnement -->
+    <div class="section">
+      <h2 class="section-title">Détails de l'approvisionnement</h2>
+      
+      <form [formGroup]="articleForm">
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label for="article">Article</label>
+            <select 
+              id="article"
+              formControlName="article"
+              class="form-control"
+            >
+              <option [ngValue]="null" disabled>
+                Sélectionner un article
+              </option>
+              <option 
+                *ngFor="let article of articles" 
+                [ngValue]="article"
+              >
+                {{ article.nom }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="quantite">Quantité</label>
+            <input 
+              type="number" 
+              id="quantite"
+              formControlName="quantite"
+              class="form-control"
+              min="1"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="prixUnitaire">Prix unitaire (FCFA)</label>
+            <input 
+              type="number" 
+              id="prixUnitaire"
+              formControlName="prixUnitaire"
+              class="form-control"
+              min="0"
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Montant total (FCFA)</label>
+            <div class="montant-total">
+              {{ (articleForm.get('quantite')?.value || 0) * (articleForm.get('prixUnitaire')?.value || 0) | number:'1.0-0' }} FCFA
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <button 
+        class="btn-ajouter-article" 
+        (click)="ajouterArticle()"
+        [disabled]="articleForm.invalid"
+      >
+        + Ajouter un autre article
+      </button>
+    </div>
+
+    <!-- Section Articles ajoutés -->
+    <div class="section">
+      <h2 class="section-title">Articles ajoutés</h2>
+      
+      <div class="table-wrapper">
+        <table class="articles-table">
+          <thead>
+            <tr>
+              <th>Article</th>
+              <th>Quantité</th>
+              <th>Prix unitaire</th>
+              <th>Montant</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="articlesAjoutes.length === 0">
+              <td colspan="5" class="empty-state">
+                Aucun article ajouté
+              </td>
+            </tr>
+            <tr *ngFor="let articleAjoute of articlesAjoutes; let i = index">
+              <td>{{ articleAjoute.article.nom }}</td>
+              <td>{{ articleAjoute.quantite }}</td>
+              <td>{{ articleAjoute.prixUnitaire | number:'1.0-0' }} FCFA</td>
+              <td>{{ articleAjoute.montant | number:'1.0-0' }} FCFA</td>
+              <td>
+                <button 
+                  class="btn-action btn-delete" 
+                  (click)="supprimerArticle(i)"
+                  title="Supprimer"
+                >
+                  🗑️
+                </button>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot *ngIf="articlesAjoutes.length > 0">
+            <tr>
+              <td colspan="3" class="text-right"><strong>Total:</strong></td>
+              <td colspan="2">
+                <strong>{{ montantTotal | number:'1.0-0' }} FCFA</strong>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="btn btn-secondary" (click)="annuler()">
+        Annuler
+      </button>
+      <button 
+        class="btn btn-primary" 
+        (click)="enregistrer()"
+        [disabled]="approvisionnementForm.invalid || articlesAjoutes.length === 0"
+      >
+        Enregistrer l'approvisionnement
+      </button>
+    </div>
+  </div>
+</div>
